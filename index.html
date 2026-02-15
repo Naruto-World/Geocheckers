@@ -1626,8 +1626,8 @@
     <div class="scroll-indicator" id="scrollIndicator"></div>
 
     <!-- ===== SECRET SHARINGAN LOGIN TRIGGER ===== -->
-    <div class="sharingan-trigger" id="sharinganTrigger" title="???">👁️</div>
-    <div class="sharingan-notify" id="sharinganNotify"></div>
+    <!-- Sharingan trigger removed - using navigation login instead -->
+
 
     <!-- ===== LOGIN MODAL ===== -->
     <div id="loginModal">
@@ -1666,6 +1666,7 @@
                         <li><a href="#characters">პერსონაჟები</a></li>
                         <li class="admin-nav-link"><a href="#" onclick="event.preventDefault(); openAddModal()">+ დამატება</a></li>
                         <li><a href="#about">ჩვენს შესახებ</a></li>
+                        <li id="authNavLink"><a href="#" onclick="event.preventDefault(); toggleAuth()" id="authButton">🔐 შესვლა</a></li>
                     </ul>
                 </nav>
             </div>
@@ -5036,8 +5037,10 @@
                 } else {
                     currentUser = null;
                     document.body.classList.remove('admin-mode');
-                    sharinganBtn.textContent = '👁️';
-                    sharinganBtn.title = '???';
+                    const authBtn = document.getElementById('authButton');
+                    if (authBtn) {
+                        authBtn.textContent = '🔐 შესვლა';
+                    }
                     console.log('ℹ️ No user logged in');
                 }
             });
@@ -5068,57 +5071,19 @@
         };
     }
 
-    // ===== SECRET SHARINGAN ACTIVATION =====
-    let sharinganClicks = 0;
-    let sharinganTimeout = null;
-    const ACTIVATION_CLICKS = 3;
-    const RESET_DELAY = 2000;
-
-    const sharinganBtn = document.getElementById('sharinganTrigger');
-    const sharinganNotify = document.getElementById('sharinganNotify');
-
-    sharinganBtn.addEventListener('click', function() {
+    // ===== AUTH TOGGLE FUNCTION =====
+    function toggleAuth() {
         // Check if in admin mode - logout
         if (document.body.classList.contains('admin-mode')) {
-            if (confirm('🌀 გამოხვიდე შარინგანის რეჟიმიდან?')) {
+            if (confirm('გსურთ გამოსვლა?')) {
                 logoutAdmin();
-                showSharinganNotify('👋 შარინგანი დეაქტივირდა');
+                showAuthToast('👋 წარმატებით გამოხვედით.');
             }
             return;
         }
 
-        // Increment clicks
-        sharinganClicks++;
-        
-        // Add activation animation
-        sharinganBtn.classList.add('activated');
-        setTimeout(() => sharinganBtn.classList.remove('activated'), 800);
-
-        // Clear existing timeout
-        if (sharinganTimeout) clearTimeout(sharinganTimeout);
-
-        // Check if activated
-        if (sharinganClicks === ACTIVATION_CLICKS) {
-            openLoginModal();
-            showSharinganNotify('🔴 შარინგანი გააქტიურდა!');
-            sharinganClicks = 0;
-        } else {
-            const remaining = ACTIVATION_CLICKS - sharinganClicks;
-            showSharinganNotify(`🌀 კიდევ ${remaining}×...`);
-        }
-
-        // Reset counter after delay
-        sharinganTimeout = setTimeout(() => {
-            sharinganClicks = 0;
-        }, RESET_DELAY);
-    });
-
-    function showSharinganNotify(message) {
-        sharinganNotify.textContent = message;
-        sharinganNotify.classList.remove('show');
-        // Force reflow
-        void sharinganNotify.offsetWidth;
-        sharinganNotify.classList.add('show');
+        // Open login modal
+        openLoginModal();
     }
 
     // Initialize Firebase on page load
@@ -5224,11 +5189,13 @@
 
     function enableAdminMode(showToast) {
         document.body.classList.add('admin-mode');
-        // Update Sharingan to Mangekyou
-        sharinganBtn.textContent = '🌀';
-        sharinganBtn.title = 'გამოსვლა';
+        // Update Login button to Logout
+        const authBtn = document.getElementById('authButton');
+        if (authBtn) {
+            authBtn.textContent = '🚪 გამოსვლა';
+        }
         if (showToast) {
-            showAuthToast('🔴 შარინგანი გააქტიურდა! მანგეკიო უჩიჰა! ✏️');
+            showAuthToast('🔴 წარმატებით შეხვედით! ✏️');
         }
     }
 
@@ -5238,9 +5205,12 @@
                 await auth.signOut();
             }
             document.body.classList.remove('admin-mode');
-            sharinganBtn.textContent = '👁️';
-            sharinganBtn.title = '???';
-            showAuthToast('👋 შარინგანი დეაქტივირდა.');
+            // Update Logout button back to Login
+            const authBtn = document.getElementById('authButton');
+            if (authBtn) {
+                authBtn.textContent = '🔐 შესვლა';
+            }
+            showAuthToast('👋 წარმატებით გამოხვედით.');
         } catch (error) {
             console.error('Logout error:', error);
             showAuthToast('❌ გამოსვლა ვერ მოხერხდა.');
